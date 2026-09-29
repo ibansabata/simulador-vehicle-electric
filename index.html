@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador vehicle elèctric</title>
+<style>
+:root{--bg:#f7f7f8;--card:#fff;--text:#111827;--muted:#6b7280;--border:#e5e7eb;--accent:#2563eb;--good:#166534;--bad:#991b1b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+main{max-width:1100px;margin:auto;padding:24px 16px 48px}.hero{margin-bottom:18px}.hero h1{margin:0 0 6px;font-size:clamp(28px,6vw,42px)}.hero p{margin:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px}.section{border-top:1px solid var(--border);padding-top:16px;margin-top:16px}.section:first-child{border-top:0;padding-top:0;margin-top:0}
+h2,h3{margin:0 0 12px}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media(max-width:560px){.fields{grid-template-columns:1fr}}
+label{font-size:14px;font-weight:600;display:block}.hint{font-size:12px;color:var(--muted);font-weight:400}
+input{width:100%;margin-top:6px;padding:11px 12px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:#fff}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.kpi{background:#f9fafb;border-radius:14px;padding:14px}.kpi small{display:block;color:var(--muted);margin-bottom:5px}.kpi strong{font-size:24px}
+.result{padding:18px;border-radius:16px;background:#eef2ff;margin-bottom:14px}.result .big{font-size:34px;font-weight:800;margin-top:4px}.sub{color:var(--muted);font-size:14px}
+canvas{width:100%;height:280px;border-radius:12px;background:#fff}.summary{margin-top:14px;padding:14px;border-radius:12px;background:#f9fafb}
+button{border:0;border-radius:12px;padding:11px 14px;font-size:15px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:white}.ghost{background:#eef2f7;color:var(--text)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.note{font-size:13px;color:var(--muted);line-height:1.45;margin-top:12px}
+.good{color:var(--good)}.bad{color:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <h1>Simulador vehicle elèctric</h1>
+    <p>Compara el cost real de mantenir un vehicle dièsel actual amb substituir-lo per un elèctric.</p>
+  </div>
+  <div class="grid">
+    <section class="card">
+      <div class="section">
+        <h2>Dades generals</h2>
+        <div class="fields">
+          <label>Km anuals<input id="km" type="number" min="0" step="500" value="15000"></label>
+          <label>Horitzó d'anàlisi (anys)<input id="years" type="number" min="1" max="25" step="1" value="12"></label>
+        </div>
+      </div>
+      <div class="section">
+        <h3>🚐 Vehicle dièsel actual</h3>
+        <div class="fields">
+          <label>Valor de venda avui (€)<input id="oldValue" type="number" min="0" step="500" value="12000"></label>
+          <label>Consum (L/100 km)<input id="dieselCons" type="number" min="0" step="0.1" value="6.5"></label>
+          <label>Preu gasoil (€/L)<input id="dieselPrice" type="number" min="0" step="0.01" value="1.55"></label>
+          <label>Manteniment anual (€)<input id="dieselMaint" type="number" min="0" step="50" value="700"></label>
+          <label>Impostos/altres anuals (€)<input id="dieselOther" type="number" min="0" step="25" value="200"></label>
+          <label>Valor estimat al final (€)<input id="oldResidual" type="number" min="0" step="500" value="3000"></label>
+        </div>
+      </div>
+      <div class="section">
+        <h3>⚡ Vehicle elèctric</h3>
+        <div class="fields">
+          <label>Preu de compra (€)<input id="evPrice" type="number" min="0" step="500" value="35000"></label>
+          <label>Ajuts/descomptes (€)<input id="grants" type="number" min="0" step="500" value="0"></label>
+          <label>Consum (kWh/100 km)<input id="evCons" type="number" min="0" step="0.5" value="18"></label>
+          <label>Electricitat xarxa (€/kWh)<input id="elecPrice" type="number" min="0" step="0.01" value="0.15"></label>
+          <label>Càrrega coberta amb solar (%)<input id="solar" type="number" min="0" max="100" step="5" value="30"></label>
+          <label>Cost oportunitat solar (€/kWh)<span class="hint"> Si vendries excedents, posa aquí la compensació</span><input id="solarCost" type="number" min="0" step="0.01" value="0"></label>
+          <label>Manteniment anual (€)<input id="evMaint" type="number" min="0" step="50" value="350"></label>
+          <label>Impostos/altres anuals (€)<input id="evOther" type="number" min="0" step="25" value="100"></label>
+          <label>Wallbox/instal·lació (€)<input id="charger" type="number" min="0" step="100" value="1000"></label>
+          <label>Valor estimat al final (€)<input id="evResidual" type="number" min="0" step="500" value="10000"></label>
+        </div>
+        <div class="actions">
+          <button id="reset" class="ghost" type="button">Restablir valors</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="card result">
+        <div class="sub">Temps d'amortització estimat</div>
+        <div id="payback" class="big">—</div>
+        <div id="paybackSub" class="sub"></div>
+      </div>
+      <div class="card">
+        <div class="kpis">
+          <div class="kpi"><small>Inversió incremental</small><strong id="investment">—</strong></div>
+          <div class="kpi"><small>Estalvi operatiu/any</small><strong id="annualSaving">—</strong></div>
+          <div class="kpi"><small>Cost/km dièsel</small><strong id="oldKm">—</strong></div>
+          <div class="kpi"><small>Cost/km elèctric</small><strong id="evKm">—</strong></div>
+        </div>
+        <div class="section">
+          <h3>Cost acumulat</h3>
+          <canvas id="chart" width="700" height="320"></canvas>
+        </div>
+        <div class="summary">
+          <div><strong>Cost total dièsel:</strong> <span id="oldTotal">—</span></div>
+          <div><strong>Cost total elèctric:</strong> <span id="evTotal">—</span></div>
+          <div id="horizonResult" style="margin-top:8px"></div>
+        </div>
+        <p id="validation" class="note"></p>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+const ids=['km','years','oldValue','dieselCons','dieselPrice','dieselMaint','dieselOther','oldResidual','evPrice','grants','evCons','elecPrice','solar','solarCost','evMaint','evOther','charger','evResidual'];
+const defaults={km:15000,years:12,oldValue:12000,dieselCons:6.5,dieselPrice:1.55,dieselMaint:700,dieselOther:200,oldResidual:3000,evPrice:35000,grants:0,evCons:18,elecPrice:.15,solar:30,solarCost:0,evMaint:350,evOther:100,charger:1000,evResidual:10000};
+const el=id=>document.getElementById(id), num=id=>Math.max(0,Number(el(id).value)||0);
+const euro=v=>new Intl.NumberFormat('ca-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v);
+const dec=v=>new Intl.NumberFormat('ca-ES',{maximumFractionDigits:2}).format(v);
+function calc(){
+  const km=num('km'), years=Math.max(1,Math.min(25,num('years')||1)), solar=Math.min(100,num('solar'))/100;
+  const oldEnergy=km/100*num('dieselCons')*num('dieselPrice');
+  const kwh=km/100*num('evCons');
+  const evEnergy=kwh*((1-solar)*num('elecPrice')+solar*num('solarCost'));
+  const oldAnnual=oldEnergy+num('dieselMaint')+num('dieselOther');
+  const evAnnual=evEnergy+num('evMaint')+num('evOther');
+  const saving=oldAnnual-evAnnual;
+  const investment=Math.max(0,num('evPrice')-num('grants')+num('charger')-num('oldValue'));
+  const payback=saving>0?investment/saving:null;
+  const oldTotal=years*oldAnnual-num('oldResidual');
+  const evTotal=investment+years*evAnnual-num('evResidual');
+
+  el('investment').textContent=euro(investment);
+  el('annualSaving').textContent=euro(saving);
+  el('oldKm').textContent=km?dec(oldAnnual/km)+' €/km':'—';
+  el('evKm').textContent=km?dec(evAnnual/km)+' €/km':'—';
+
+  if(payback===null){
+    el('payback').textContent='No s’amortitza';
+    el('paybackSub').textContent='Amb aquestes dades, l’elèctric no redueix el cost operatiu anual.';
+  } else {
+    el('payback').textContent=dec(payback)+' anys';
+    el('paybackSub').textContent='≈ '+Math.round(payback*12)+' mesos';
+  }
+
+  el('oldTotal').textContent=euro(oldTotal);
+  el('evTotal').textContent=euro(evTotal);
+  const diff=oldTotal-evTotal;
+  const r=el('horizonResult');
+  if(diff>=0){r.className='good';r.textContent='En '+years+' anys, l’elèctric presenta un cost total '+euro(diff)+' inferior.'}
+  else {r.className='bad';r.textContent='En '+years+' anys, mantenir el dièsel presenta un cost total '+euro(-diff)+' inferior.'}
+
+  el('validation').textContent=(solar>0&&num('solarCost')===0)?'Nota: l’energia solar autoconsumida s’està considerant a cost d’oportunitat 0 €. Si els excedents tenen compensació, introdueix-la al camp corresponent.':'';
+  draw(years,oldAnnual,evAnnual,investment,num('oldResidual'),num('evResidual'),payback);
+}
+function draw(years,oa,ea,inv,orv,erv,pb){
+  const c=el('chart'),ctx=c.getContext('2d'),W=c.width,H=c.height,L=54,R=18,T=24,B=38;
+  ctx.clearRect(0,0,W,H);
+  const a=[],b=[]; for(let y=0;y<=years;y++){a.push(oa*y-(y===years?orv:0));b.push(inv+ea*y-(y===years?erv:0));}
+  const max=Math.max(1,...a,...b)*1.08,x=y=>L+(W-L-R)*(y/years),yy=v=>H-B-(H-T-B)*(Math.max(0,v)/max);
+  ctx.font='12px system-ui';ctx.fillStyle='#6b7280';ctx.strokeStyle='#e5e7eb';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=max*i/4,py=yy(v);ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(W-R,py);ctx.stroke();ctx.fillText(Math.round(v/1000)+'k',6,py+4);}
+  const line=(arr,color)=>{ctx.beginPath();arr.forEach((v,i)=>i?ctx.lineTo(x(i),yy(v)):ctx.moveTo(x(i),yy(v)));ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();}
+  line(a,'#7c3aed');line(b,'#059669');
+  if(pb!==null&&pb<=years){const px=x(pb);ctx.strokeStyle='#111827';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(px,T);ctx.lineTo(px,H-B);ctx.stroke();ctx.setLineDash([]);}
+  ctx.fillStyle='#6b7280';ctx.fillText('Avui',L,H-12);ctx.fillText(years+' anys',W-R-42,H-12);
+  ctx.fillStyle='#7c3aed';ctx.fillRect(L,T-14,10,10);ctx.fillStyle='#111827';ctx.fillText('Dièsel',L+16,T-5);
+  ctx.fillStyle='#059669';ctx.fillRect(L+78,T-14,10,10);ctx.fillStyle='#111827';ctx.fillText('Elèctric',L+94,T-5);
+}
+ids.forEach(id=>el(id).addEventListener('input',calc));
+el('reset').addEventListener('click',()=>{Object.entries(defaults).forEach(([k,v])=>el(k).value=v);calc();});
+calc();
+</script>
+</body>
+</html>
